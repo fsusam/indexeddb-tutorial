@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta>
+        <title></title>       
+        <script>
+           let rosters = [
+               {
+                   "name": "s",
+                   "dob": "22/11/80",
+                   "email": "ya@lll.org"
+               },
+               {
+                   "name": "duck",
+                   "dob": "02/05/78",
+                   "email": "qui@ai.com"
+               },
+               {
+                   "name": "lala",
+                   "dob": "18/07/95",
+                   "email": "lim@reed.com"
+               },
+               {
+                   "name": "Fethi Susam",
+                   "dob": "03/14/87",
+                   "email": "fsusam@gmail.com"
+               }
+           ]
+
+           let db = null;
+
+           function create_db(){
+                const request = window.indexedDB.open("MyTestDB");
+
+                request.onerror = function(event){
+                    console.log("Problem openning DB");
+                }
+
+                request.onupgradeneeded = function(event){
+                    db = event.target.result;
+
+                    const store = db.createObjectStore("roster", {keyPath: "email"});
+                    store.createIndex("name", "name", { unique: false });
+
+                    store.transaction.oncomplete = function(event){
+                        console.log("Roster store successfully completed.");
+                    }
+
+                }
+
+                request.onsuccess = function(event){
+                    db = event.target.result;
+                    console.log("Seccusefully opened DB.");
+                    //insert_record(rosters);
+                }
+
+           }
+            
+           function delete_db(){
+               const request = window.indexedDB.deleteDatabase("MyTestDB");
+
+               request.onsuccess = function(event){
+                  console.log("DB successfully deleted"); 
+               }
+
+           }
+
+           function insert_record(records){
+                if(db){
+                    const insert_transaction = db.transaction('roster','readwrite');
+                    const store = insert_transaction.objectStore('roster');
+
+                    insert_transaction.onerror = function(event){
+                        console.log("Problem with transaction");        
+                    }
+
+                    insert_transaction.oncomplete = function(){
+                        console.log("All transaction completed");        
+                    }
+
+                    records.forEach(element => {
+                        let request = store.add(element);
+
+                        request.onerror = function(event){
+                            console.log("Could not add", element);
+                        }
+
+                        request.onsuccess = function(event){
+                            console.log("Successfully added", element);
+                        }
+                    });                    
+                }
+            }
+
+            function update_record(record){
+                if(db){
+                    const update_transaction = db.transaction('roster','readwrite');
+                    const store = update_transaction.objectStore('roster');
+
+                    update_transaction.onerror = function(event){
+                        console.log("Problem with transaction");        
+                    }
+
+                    update_transaction.oncomplete = function(){
+                        console.log("All transaction completed");        
+                    }
+
+                    let request = store.put(record);
+
+                    request.onerror = function(event){
+                        console.log("Could not update", record);
+                    }
+
+                    request.onsuccess = function(event){
+                        console.log("Successfully updated", event.target.result);
+                    }                   
+                }
+           }
+
+           function delete_record(email){
+                if(db){
+                    const delete_transaction = db.transaction('roster','readwrite');
+                    const store = delete_transaction.objectStore('roster');
+
+                    delete_transaction.onerror = function(event){
+                        console.log("Problem with transaction");        
+                    }
+
+                    delete_transaction.oncomplete = function(){
+                        console.log("All transaction completed");        
+                    }
+
+                    let request = store.delete(email);
+
+                    request.onerror = function(event){
+                        console.log("Could not delete", email);
+                    }
+
+                    request.onsuccess = function(event){
+                        console.log("Successfully updated", event.target.result);
+                    }                   
+                }
+            }
+
+            function get_record(email){
+                if(db){
+                    const get_transaction = db.transaction('roster','readonly');
+                    const store = get_transaction.objectStore('roster');
+
+                    get_transaction.onerror = function(event){
+                        console.log("Problem with transaction");        
+                    }
+
+                    get_transaction.oncomplete = function(){
+                        console.log("All transaction completed");        
+                    }
+
+                    let request = store.get(email);
+
+                    request.onerror = function(event){
+                        console.log("Could not find", email);
+                    }
+
+                    request.onsuccess = function(event){
+                        console.log("Successfully found", event.target.result);
+                    }                   
+                }
+            }
+
+            function getNameByIndex(name){
+                const index_transaction = db.transaction('roster','readonly');
+                const store = index_transaction.objectStore('roster');
+                index_transaction.onerror = function(event){
+                    console.log("Problem with transaction");        
+                }
+
+                index_transaction.oncomplete = function(){
+                    console.log("All transaction completed");        
+                }
+                
+                var index = store.index("name");
+                // index.get(name).onsuccess = function(event) {
+                //     console.log(event.target.result);
+                // };
+
+                //var index = store.index('name');
+
+                index.openCursor(IDBKeyRange.bound(name, name + '\uffff'), 'prev').onsuccess = function(event) {
+                    var cursor = event.target.result;
+                    if(cursor) {
+                        console.log("Cursor: ", cursor.value);
+                    } else {
+                        console.log('Entries all displayed.');    
+                    }
+                };
+
+            }
+
+            create_db();
+            //delete_db();
+        </script>  
+    </head>
+    <body>
+
+    </body>
+</html>
